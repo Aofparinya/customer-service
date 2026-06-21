@@ -28,6 +28,7 @@ type Pagination struct {
 }
 
 type CreateCustomerInput struct {
+	ID                 *uuid.UUID            `json:"id"`
 	CustomerType       domain.CustomerType   `json:"customerType" validate:"required,oneof=INDIVIDUAL CORPORATE"`
 	Status             domain.CustomerStatus `json:"status" validate:"omitempty,oneof=ACTIVE INACTIVE BLOCKED"`
 	FirstName          *string               `json:"firstName"`

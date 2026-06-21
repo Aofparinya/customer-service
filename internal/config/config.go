@@ -9,12 +9,15 @@ import (
 )
 
 type Config struct {
-	AppEnv       string
-	Port         int
-	CORSOrigins  []string
-	DatabaseURL  string
-	AuthURL      string
-	AuthCacheTTL time.Duration
+	AppEnv              string
+	Port                int
+	CORSOrigins         []string
+	DatabaseURL         string
+	AuthURL             string
+	AuthCacheTTL        time.Duration
+	CommonURL           string
+	ServiceClientID     string
+	ServiceClientSecret string
 }
 
 func Load() (Config, error) {
@@ -29,20 +32,24 @@ func Load() (Config, error) {
 
 	databaseURL := strings.TrimSpace(viper.GetString("DATABASE_URL"))
 	authURL := strings.TrimRight(strings.TrimSpace(viper.GetString("AUTH_SERVICE_URL")), "/")
+	commonURL := strings.TrimRight(strings.TrimSpace(viper.GetString("COMMON_SERVICE_URL")), "/")
 	if databaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
 	}
-	if authURL == "" {
+	if authURL == "" || commonURL == "" {
 		return Config{}, fmt.Errorf("AUTH_SERVICE_URL is required")
 	}
 
 	return Config{
-		AppEnv:       viper.GetString("APP_ENV"),
-		Port:         viper.GetInt("PORT"),
-		CORSOrigins:  splitCSV(viper.GetString("CORS_ORIGIN")),
-		DatabaseURL:  databaseURL,
-		AuthURL:      authURL,
-		AuthCacheTTL: time.Duration(viper.GetInt("AUTH_CACHE_TTL_SECONDS")) * time.Second,
+		AppEnv:              viper.GetString("APP_ENV"),
+		Port:                viper.GetInt("PORT"),
+		CORSOrigins:         splitCSV(viper.GetString("CORS_ORIGIN")),
+		DatabaseURL:         databaseURL,
+		AuthURL:             authURL,
+		AuthCacheTTL:        time.Duration(viper.GetInt("AUTH_CACHE_TTL_SECONDS")) * time.Second,
+		CommonURL:           commonURL,
+		ServiceClientID:     viper.GetString("SERVICE_CLIENT_ID"),
+		ServiceClientSecret: viper.GetString("SERVICE_CLIENT_SECRET"),
 	}, nil
 }
 

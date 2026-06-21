@@ -14,12 +14,21 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repository struct {
-	db *gorm.DB
+type NumberIssuer interface {
+	NextNumber(context.Context, string) (string, error)
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+type Repository struct {
+	db      *gorm.DB
+	numbers NumberIssuer
+}
+
+func NewRepository(db *gorm.DB, issuers ...NumberIssuer) *Repository {
+	var numbers NumberIssuer
+	if len(issuers) > 0 {
+		numbers = issuers[0]
+	}
+	return &Repository{db: db, numbers: numbers}
 }
 
 func (repository *Repository) CreateCustomer(
@@ -29,10 +38,13 @@ func (repository *Repository) CreateCustomer(
 	var result customerModel
 	err := repository.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var customerNo string
-		if err := tx.Raw(`
-			SELECT 'CUS-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' ||
-			       lpad(nextval('customer.customer_number_seq')::text, 6, '0')
-		`).Scan(&customerNo).Error; err != nil {
+		var err error
+		if repository.numbers != nil {
+			customerNo, err = repository.numbers.NextNumber(ctx, "CUS")
+		} else {
+			err = tx.Raw(`SELECT 'CUS-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || lpad(nextval('customer.customer_number_seq')::text, 6, '0')`).Scan(&customerNo).Error
+		}
+		if err != nil {
 			return err
 		}
 		result = customerModelFromDomain(customer)

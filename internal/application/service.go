@@ -29,8 +29,12 @@ func (service *Service) CreateCustomer(
 	if err := validateCustomerNames(input.CustomerType, input.FirstName, input.LastName, input.CompanyName); err != nil {
 		return domain.Customer{}, err
 	}
+	customerID := uuid.New()
+	if input.ID != nil && *input.ID != uuid.Nil {
+		customerID = *input.ID
+	}
 	customer := domain.Customer{
-		ID:                 uuid.New(),
+		ID:                 customerID,
 		CustomerType:       input.CustomerType,
 		Status:             input.Status,
 		FirstName:          input.FirstName,

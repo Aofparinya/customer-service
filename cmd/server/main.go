@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/saaof/order-platform/customer-service/internal/adapter/auth"
+	commonclient "github.com/saaof/order-platform/customer-service/internal/adapter/common"
 	httpadapter "github.com/saaof/order-platform/customer-service/internal/adapter/http"
 	postgresrepository "github.com/saaof/order-platform/customer-service/internal/adapter/persistence/postgres"
 	"github.com/saaof/order-platform/customer-service/internal/application"
@@ -44,7 +45,8 @@ func run() error {
 		return err
 	}
 
-	repository := postgresrepository.NewRepository(db)
+	numberClient := commonclient.New(cfg.CommonURL, cfg.AuthURL, cfg.ServiceClientID, cfg.ServiceClientSecret)
+	repository := postgresrepository.NewRepository(db, numberClient)
 	service := application.NewService(repository)
 	authClient := auth.NewClient(cfg.AuthURL, cfg.AuthCacheTTL)
 	handler := httpadapter.NewHandler(service)
